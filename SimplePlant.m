@@ -8,13 +8,14 @@ Tamb = 20;
 T = 20;
 k_heat = 0.8;
 k_cool = 0.15;
+dist = -0.5; % disturbance injection to control output
 
 dt = 0.02;                 % 50 Hz plant tick
 duration = 30;             % seconds
 steps = round(duration/dt);
 
 % ---------- Target ----------
-setpoint = 30;
+setpoint = 22;
 
 % ---------- UDP settings ----------
 pi_ip = '169.254.239.106';    % Pi IP (CHAR)
@@ -120,7 +121,11 @@ for i = 1:steps
     u_cmd = max(0.0, min(1.0, u_cmd));
 
     % ---- Plant update ----
-    dT = (k_heat*u_cmd - k_cool*(T - Tamb)) * dt;
+    if i > 1500/3 % inject disturbance after 10 seconds
+        dT = (k_heat*(u_cmd + dist) - k_cool*(T - Tamb)) * dt;
+    else
+        dT = (k_heat*u_cmd - k_cool*(T - Tamb)) * dt;
+    end
     T = T + dT;
     e = setpoint - T;
 
@@ -169,6 +174,5 @@ xlabel('t (s)'); ylabel('Temp (°C)'); title('Temperature vs Setpoint');
 
 figure; plot(time, log.u);
 xlabel('t (s)'); ylabel('u'); title('Control Output');
-
 figure; plot(time, log.loop_latency_ms);
 xlabel('t (s)'); ylabel('Latency (ms)'); title('Latency of UDP Round Trip');
