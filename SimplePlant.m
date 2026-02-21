@@ -69,9 +69,17 @@ for i = 1:steps
     seq = seq + 1;
     t_sim = (i-1)*dt;
 
+    % ---- measurement jitter ----
+    if rand(1) > 5
+        m_jitter = rand(1)/2; % measurement noise
+    else
+        m_jitter = -rand(1)/2; % measurement noise
+    end
+    T_noisy = T + m_jitter;
+
     % ---- Build sensor packet ----
     % Format: DATA,seq,t_sim,temp,setpoint,dt
-    msg_out = sprintf("DATA,%d,%.6f,%.3f,%.3f,%.4f\n", seq, t_sim, T, setpoint, dt);
+    msg_out = sprintf("DATA,%d,%.6f,%.3f,%.3f,%.4f\n", seq, t_sim, T_noisy, setpoint, dt);
     bytes_out = uint8(char(msg_out));
 
     wall_send = toc(start_wall) * 1000.0;
@@ -147,7 +155,7 @@ for i = 1:steps
     else
         log.late_flag(i) = 0;
     end
-    log.controller_mode(i) = 'PI'; % change manually
+    log.controller_mode(i) = 'PID'; % change manually
     log.scenario_id(i) = 'none yet'; % change manually
     log.r(i) = setpoint;
     log.y(i) = T;
